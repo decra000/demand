@@ -5,3 +5,9 @@ pytesseract
 pdfplumber
 pillow
 numpy
+gradio
+fpdf
+transformers
+torch
+torchvision
+torchaudio
