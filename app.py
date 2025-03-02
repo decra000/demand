@@ -1,5 +1,4 @@
 # Install necessary libraries
-!pip install gradio fpdf transformers torch torchvision torchaudio
 
 import gradio as gr
 from fpdf import FPDF
