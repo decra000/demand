@@ -44,7 +44,16 @@ if query:
 
     # Combine for AI summarization
     combined_text = " ".join(related_paragraphs[:2])  # Use top 2 for summary
-    summary = summarizer(combined_text, max_length=150, min_length=50, do_sample=False)[0]['summary_text']
+
+    # Prevent errors by handling empty or too-long input
+    if combined_text.strip():
+        MAX_INPUT_LENGTH = 1024
+        if len(combined_text.split()) > MAX_INPUT_LENGTH:
+            combined_text = " ".join(combined_text.split()[:MAX_INPUT_LENGTH])  # Truncate
+
+        summary = summarizer(combined_text, max_length=150, min_length=50, do_sample=False)[0]['summary_text']
+    else:
+        summary = "No relevant information found in the Companies Act for your query."
 
     st.subheader("AI-Generated Explanation:")
     st.write(summary)
