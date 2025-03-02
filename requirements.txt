@@ -1,6 +1,5 @@
 streamlit
-fpdf
-transformers
-torch
-torchvision
-torchaudio
+faiss-cpu
+numpy
+sentence-transformers
+pypdf2
