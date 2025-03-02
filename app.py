@@ -4,11 +4,9 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import PyPDF2
 import re
-from transformers import pipeline
 
 # Load AI model for embeddings
 model = SentenceTransformer("all-MiniLM-L6-v2")
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 # Function to extract text from the PDF
 def extract_text_from_pdf(pdf_path):
@@ -33,31 +31,25 @@ index.add(np.array(embeddings))
 
 # Streamlit UI
 st.title("Kenya Companies Act Chatbot")
-st.write("Ask a question, and I'll find the most relevant legal sections.")
+st.write("Ask a question, and I'll find the most relevant section from the Companies Act of Kenya.")
 
 query = st.text_input("Enter your legal question:")
 if query:
     query_embedding = model.encode([query])
-    _, closest_matches = index.search(np.array(query_embedding), 3)  # Retrieve top 3 matches
     
-    related_paragraphs = [paragraphs[i] for i in closest_matches[0]]
-
-    # Combine for AI summarization
-    combined_text = " ".join(related_paragraphs[:2])  # Use top 2 for summary
-
-    # Prevent errors by handling empty or too-long input
-    if combined_text.strip():
-        MAX_INPUT_LENGTH = 1024
-        if len(combined_text.split()) > MAX_INPUT_LENGTH:
-            combined_text = " ".join(combined_text.split()[:MAX_INPUT_LENGTH])  # Truncate
-
-        summary = summarizer(combined_text, max_length=150, min_length=50, do_sample=False)[0]['summary_text']
-    else:
-        summary = "No relevant information found in the Companies Act for your query."
-
-    st.subheader("AI-Generated Explanation:")
+    # Retrieve top 3 most relevant sections
+    _, closest_matches = index.search(np.array(query_embedding), 3)  # Get 3 best matches
+    
+    relevant_sections = [paragraphs[i] for i in closest_matches[0]]  # Extract matching paragraphs
+    
+    # Generate a human-readable summary (Simple approach)
+    summary = "Based on your query, the Companies Act mentions the following key points:\n\n"
+    for i, section in enumerate(relevant_sections, 1):
+        summary += f"{i}. {section[:200]}...\n\n"  # Show first 200 characters
+    
+    st.subheader("Plain English Summary:")
     st.write(summary)
-
+    
     st.subheader("Relevant Legal Sections:")
-    for para in related_paragraphs:
-        st.write(para)
+    for section in relevant_sections:
+        st.write(section)
