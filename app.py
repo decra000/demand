@@ -1,9 +1,21 @@
 # Install necessary libraries
+# Import Gradio for UI
+import gradio as gr  
 
-import gradio as gr
-from fpdf import FPDF
+# Import FPDF for PDF generation
+from fpdf import FPDF  
+
+# Import Transformers for AI models
+from transformers import pipeline  
+
+# Import Torch & related libraries for deep learning support
+import torchvision  
+import torchaudio  
+
+# Clear GPU cache (if using GPU)
+torch.cuda.empty_cache()  
+
 import datetime
-from transformers import pipeline
 import torch
 
 # Clear GPU cache
