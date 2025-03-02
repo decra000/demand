@@ -3,6 +3,7 @@ import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import PyPDF2
+import re
 
 # Load AI model for embeddings
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -19,10 +20,12 @@ def extract_text_from_pdf(pdf_path):
 # Load and process legal text
 pdf_path = "CompaniesAct17of2015 (3).pdf"
 legal_text = extract_text_from_pdf(pdf_path)
-sections = legal_text.split("SECTION ")  # Splitting into sections
 
-# Create embeddings for each section
-embeddings = model.encode(sections)
+# Split into smaller meaningful chunks (Paragraphs instead of Sections)
+paragraphs = re.split(r'\n{2,}', legal_text)  # Splitting by double newlines (paragraphs)
+
+# Create embeddings for each paragraph
+embeddings = model.encode(paragraphs)
 index = faiss.IndexFlatL2(embeddings.shape[1])
 index.add(np.array(embeddings))
 
@@ -34,5 +37,8 @@ query = st.text_input("Enter your legal question:")
 if query:
     query_embedding = model.encode([query])
     _, closest_match = index.search(np.array(query_embedding), 1)
-    st.subheader("Relevant Section:")
-    st.write(sections[closest_match[0][0]])
+    
+    # Retrieve and display only the most relevant paragraph
+    best_match = paragraphs[closest_match[0][0]]
+    st.subheader("Relevant Legal Information:")
+    st.write(best_match)
