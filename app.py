@@ -1,20 +1,9 @@
-# Install necessary libraries
-# Import Gradio for UI
 import torch
 
-# Check if Torch is installed
-try:
-    print(f"Torch version: {torch.__version__}")
+# Only clear CUDA cache if a GPU is available
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
 
-    # Check if CUDA (GPU) is available
-    if torch.cuda.is_available():
-        print("GPU detected! Clearing CUDA cache...")
-        torch.cuda.empty_cache()
-    else:
-        print("No GPU detected. Skipping CUDA cache clearing.")
-
-except NameError as e:
-    print(f"Error: {e}. Torch might not be installed.")
 
 import gradio as gr  
 
