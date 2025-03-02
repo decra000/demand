@@ -4,9 +4,11 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import PyPDF2
 import re
+from transformers import pipeline
 
 # Load AI model for embeddings
 model = SentenceTransformer("all-MiniLM-L6-v2")
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 # Function to extract text from the PDF
 def extract_text_from_pdf(pdf_path):
@@ -31,14 +33,22 @@ index.add(np.array(embeddings))
 
 # Streamlit UI
 st.title("Kenya Companies Act Chatbot")
-st.write("Ask a question, and I'll find the most relevant section from the Companies Act of Kenya.")
+st.write("Ask a question, and I'll find the most relevant legal sections.")
 
 query = st.text_input("Enter your legal question:")
 if query:
     query_embedding = model.encode([query])
-    _, closest_match = index.search(np.array(query_embedding), 1)
+    _, closest_matches = index.search(np.array(query_embedding), 3)  # Retrieve top 3 matches
     
-    # Retrieve and display only the most relevant paragraph
-    best_match = paragraphs[closest_match[0][0]]
-    st.subheader("Relevant Legal Information:")
-    st.write(best_match)
+    related_paragraphs = [paragraphs[i] for i in closest_matches[0]]
+
+    # Combine for AI summarization
+    combined_text = " ".join(related_paragraphs[:2])  # Use top 2 for summary
+    summary = summarizer(combined_text, max_length=150, min_length=50, do_sample=False)[0]['summary_text']
+
+    st.subheader("AI-Generated Explanation:")
+    st.write(summary)
+
+    st.subheader("Relevant Legal Sections:")
+    for para in related_paragraphs:
+        st.write(para)
