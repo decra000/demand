@@ -17,7 +17,7 @@ def extract_text_from_pdf(pdf_path):
     return text
 
 # Load and process legal text
-pdf_path = "/mnt/data/CompaniesAct17of2015 (3).pdf"
+pdf_path = "CompaniesAct17of2015 (3).pdf"
 legal_text = extract_text_from_pdf(pdf_path)
 sections = legal_text.split("SECTION ")  # Splitting into sections
 
