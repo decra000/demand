@@ -15,15 +15,27 @@ def extract_text_from_pdf(pdf_path):
     with open(pdf_path, "rb") as f:
         reader = PyPDF2.PdfReader(f)
         for page in reader.pages:
-            text += page.extract_text() + "\n\n"
+            extracted_text = page.extract_text()
+            if extracted_text:  # Avoid NoneType errors
+                text += extracted_text + "\n\n"
     return text
 
 # Load and process legal text
 pdf_path = "CompaniesAct17of2015 (3).pdf"
 legal_text = extract_text_from_pdf(pdf_path)
 
+# Ensure text was extracted
+if not legal_text.strip():
+    st.error("Error: No text was extracted from the PDF. Please check the file.")
+    st.stop()
+
 # Split text into meaningful sections (Using "SECTION" as a delimiter)
 sections = re.split(r"(SECTION \d+)", legal_text)  # Splitting based on section headings
+
+# Ensure we have valid sections
+if len(sections) < 2:
+    st.error("Error: Unable to split the text into valid sections. Check formatting.")
+    st.stop()
 
 # Reconstruct sections properly
 structured_chunks = []
@@ -32,10 +44,27 @@ for i in range(1, len(sections), 2):
     section_body = sections[i + 1].strip() if i + 1 < len(sections) else ""
     structured_chunks.append(f"{section_title}\n{section_body}")
 
+# Debugging: Ensure structured_chunks is not empty
+if not structured_chunks:
+    st.error("Error: No valid sections were created after processing.")
+    st.stop()
+
 # Create embeddings for each section
-embeddings = model.encode(structured_chunks)
-index = faiss.IndexFlatL2(embeddings.shape[1])
-index.add(np.array(embeddings))
+try:
+    embeddings = model.encode(structured_chunks)
+    if embeddings.size == 0:  # Check if embeddings are empty
+        raise ValueError("Embedding array is empty.")
+except Exception as e:
+    st.error(f"Error in embedding generation: {str(e)}")
+    st.stop()
+
+# Create FAISS index
+try:
+    index = faiss.IndexFlatL2(embeddings.shape[1])  # Ensure embeddings have correct shape
+    index.add(np.array(embeddings))
+except Exception as e:
+    st.error(f"Error initializing FAISS index: {str(e)}")
+    st.stop()
 
 # Load summarization model
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
